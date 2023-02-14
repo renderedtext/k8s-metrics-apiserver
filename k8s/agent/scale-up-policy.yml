@@ -1,0 +1,33 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: semaphore-agent-scale-up
+  namespace: semaphore
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: semaphore-agent
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: External
+      external:
+        metric:
+          name: queued_jobs
+        target:
+          type: Value
+          value: 1
+  behavior:
+    scaleDown:
+      selectPolicy: Disabled
+    scaleUp:
+      stabilizationWindowSeconds: 20
+      selectPolicy: Max
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 20
+        - type: Percent
+          value: 100
+          periodSeconds: 20

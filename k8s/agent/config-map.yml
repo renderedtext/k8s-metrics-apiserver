@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: semaphore-agent-config
+  namespace: semaphore
+data:
+  semaphore-agent.yml: |
+    endpoint: semaphore.semaphoreci.com
+    token: ...
+    interruption-grace-period: 300
+    kubernetes-executor: true
+    kubernetes-image-pull-policy: IfNotPresent

@@ -67,6 +67,7 @@ func (p *SemaphoreMetricsProvider) ListAllExternalMetrics() []provider.ExternalM
 // TODO: use noise in intervals
 func (p *SemaphoreMetricsProvider) Collect() {
 	for {
+		klog.Info("Collecting metrics from Semaphore API...")
 		err := p.collect()
 		if err != nil {
 			klog.Errorf("error scraping metrics: %s", err)
@@ -79,8 +80,17 @@ func (p *SemaphoreMetricsProvider) Collect() {
 func (p *SemaphoreMetricsProvider) collect() error {
 	m, err := p.config.SemaphoreClient.GetMetrics()
 	if err != nil {
+		klog.Errorf("Error collecting metrics from Semaphore API: %v", err)
 		return err
 	}
+
+	klog.Infof(
+		"Received metrics: agents/idle=%d, agents/occupied=%d, jobs/running=%d jobs/queued=%d",
+		m.Agents.Idle,
+		m.Agents.Occupied,
+		m.Jobs.Running,
+		m.Jobs.Queued,
+	)
 
 	p.data.Store("idle_agents", m.Agents.Idle)
 	p.data.Store("occupied_agents", m.Agents.Occupied)
@@ -89,7 +99,12 @@ func (p *SemaphoreMetricsProvider) collect() error {
 
 	totalAgents := m.Agents.Idle + m.Agents.Occupied
 	if totalAgents > 0 {
-		p.data.Store("idle_agents_percentage", m.Agents.Idle/totalAgents)
+		occupiedPercentage := 100 * (m.Agents.Occupied / totalAgents)
+		klog.Infof("Occupied agent percentage: %d", occupiedPercentage)
+		p.data.Store("occupied_agents_percentage", occupiedPercentage)
+	} else {
+		klog.Info("No agents available")
+		p.data.Store("occupied_agents_percentage", 0)
 	}
 
 	return nil

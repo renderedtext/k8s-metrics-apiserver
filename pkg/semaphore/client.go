@@ -37,7 +37,7 @@ type AgentMetrics struct {
 }
 
 func (c *Client) GetMetrics() (*Metrics, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/metrics", c.endpoint), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://%s/api/v1/self_hosted_agents/metrics", c.endpoint), nil)
 	if err != nil {
 		return nil, err
 	}
