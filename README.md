@@ -1,33 +1,13 @@
-## API service for Semaphore metrics
+# Kubernetes metrics server for Semaphore agent metrics
 
-This project exposes an external metrics provider to fetch Semaphore metrics. It's built upon [custom-metrics-apiserver](https://github.com/kubernetes-sigs/custom-metrics-apiserver).
+This project exposes an external metrics provider to fetch Semaphore metrics. It's built upon [custom-metrics-apiserver](https://github.com/kubernetes-sigs/custom-metrics-apiserver). The metrics exposed by this server can be used when configuring a Kubernetes a [HorizontalPodAutoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) to scale a [Semaphore agent](https://github.com/semaphoreci/agent) pool.
 
-## Running
+Check the [Semaphore agent Helm chart](https://github.com/renderedtext/helm-charts) for usage.
 
-```bash
-# Build provider image
-make build
-make build.image
+## Metrics exposed
 
-# Build agent image
-make build.agent.image
-
-# Create semaphore namespace
-kubectl apply -f k8s/namespace.yml
-
-# Create resources for custom metrics server
-make k8s.metrics.create
-
-# Create resources for agents
-make k8s.agent.create
-```
-
-## Destroying
-
-```bash
-# Delete agent resources
-make k8s.agent.delete
-
-# Delete custom metrics server resources
-make k8s.metrics.delete
-```
+- `idle_agents`
+- `occupied_agents`
+- `running_jobs`
+- `queued_jobs`
+- `occupied_agents_percentage`
