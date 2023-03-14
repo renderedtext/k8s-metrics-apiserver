@@ -9,16 +9,10 @@ import (
 
 type Client struct {
 	httpClient *http.Client
-	endpoint   string
-	token      string
 }
 
 func NewClient(httpClient *http.Client, endpoint, token string) *Client {
-	return &Client{
-		httpClient: httpClient,
-		endpoint:   endpoint,
-		token:      token,
-	}
+	return &Client{httpClient: httpClient}
 }
 
 type Metrics struct {
@@ -26,9 +20,23 @@ type Metrics struct {
 	Agents AgentMetrics
 }
 
+func (m *Metrics) String() string {
+	return fmt.Sprintf(
+		"agents/occupied=%d agents/idle=%d jobs/queued=%d jobs/running=%d",
+		m.Agents.Occupied,
+		m.Agents.Idle,
+		m.Jobs.Queued,
+		m.Jobs.Running,
+	)
+}
+
 type JobMetrics struct {
 	Queued  int
 	Running int
+}
+
+func (m *JobMetrics) Total() int {
+	return m.Queued + m.Running
 }
 
 type AgentMetrics struct {
@@ -36,13 +44,26 @@ type AgentMetrics struct {
 	Occupied int
 }
 
-func (c *Client) GetMetrics() (*Metrics, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://%s/api/v1/self_hosted_agents/metrics", c.endpoint), nil)
+func (m *AgentMetrics) Total() int {
+	return m.Idle + m.Occupied
+}
+
+func (m *AgentMetrics) OccupiedPercentage() int {
+	if m.Total() > 0 {
+		return 100 * (m.Occupied / m.Total())
+	}
+
+	// TODO: not sure we should return 0 here
+	return 0
+}
+
+func (c *Client) GetMetrics(endpoint, token string) (*Metrics, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://%s/api/v1/self_hosted_agents/metrics", endpoint), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Token %s", c.token))
+	req.Header.Set("Authorization", fmt.Sprintf("Token %s", token))
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err

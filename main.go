@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"net/http"
 	"os"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -10,7 +9,6 @@ import (
 	"k8s.io/klog/v2"
 
 	semaphoreProvider "github.com/semaphoreci/k8s-metrics-apiserver/pkg/provider"
-	"github.com/semaphoreci/k8s-metrics-apiserver/pkg/semaphore"
 	basecmd "sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
 )
 
@@ -30,21 +28,16 @@ func (a *SemaphoreAdapter) makeProviderOrDie() *semaphoreProvider.SemaphoreMetri
 		klog.Fatalf("unable to construct discovery REST mapper: %v", err)
 	}
 
-	semaphoreEndpoint := os.Getenv("SEMAPHORE_ENDPOINT")
-	if semaphoreEndpoint == "" {
-		klog.Fatal("SEMAPHORE_ENDPOINT not found")
-	}
-
-	semaphoreToken := os.Getenv("SEMAPHORE_TOKEN")
-	if semaphoreToken == "" {
-		klog.Fatal("SEMAPHORE_TOKEN not found")
-	}
-
-	return semaphoreProvider.New(semaphoreProvider.Config{
-		Client:          client,
-		Mapper:          mapper,
-		SemaphoreClient: semaphore.NewClient(http.DefaultClient, semaphoreEndpoint, semaphoreToken),
+	provider, err := semaphoreProvider.New(semaphoreProvider.Config{
+		Client: client,
+		Mapper: mapper,
 	})
+
+	if err != nil {
+		klog.Fatalf("unable to construct Semaphore provider: %v", err)
+	}
+
+	return provider
 }
 
 func main() {
@@ -56,7 +49,9 @@ func main() {
 	cmd.Flags().StringVar(&cmd.Message, "msg", "starting semaphore metrics adapter...", "startup message")
 
 	// make sure you get the klog flags
-	logs.AddGoFlags(flag.CommandLine)
+	// I get a 'flag redefined: alsologtostderr' panic if I do this, so I'm leaving it out for now
+	// logs.AddGoFlags(flag.CommandLine)
+
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 	cmd.Flags().Parse(os.Args)
 
@@ -64,7 +59,6 @@ func main() {
 	cmd.WithExternalMetrics(provider)
 	klog.Infof(cmd.Message)
 
-	// TODO: make collect stop if cmd stops
 	go provider.Collect()
 
 	if err := cmd.Run(wait.NeverStop); err != nil {
