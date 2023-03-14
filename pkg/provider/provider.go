@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -55,7 +57,7 @@ type AgentTypeInfo struct {
 }
 
 type SemaphoreMetricsProvider struct {
-	secrets     dynamic.NamespaceableResourceInterface
+	secrets     dynamic.ResourceInterface
 	secretCache *ristretto.Cache
 	config      Config
 	data        sync.Map
@@ -69,14 +71,21 @@ type Config struct {
 
 func New(config Config) (*SemaphoreMetricsProvider, error) {
 
+	namespace := os.Getenv("KUBERNETES_NAMESPACE")
+	if namespace == "" {
+		namespace = "default"
+	}
+
 	// The provider needs read access to secrets,
 	// so it can find all the secrets for each agent type,
 	// and use the agent type token in them to grab metrics from the Semaphore API.
-	c := config.Client.Resource(schema.GroupVersionResource{
-		Group:    "",
-		Version:  "v1",
-		Resource: "secrets",
-	})
+	c := config.Client.
+		Resource(schema.GroupVersionResource{
+			Group:    "",
+			Version:  "v1",
+			Resource: "secrets",
+		}).
+		Namespace(namespace)
 
 	/*
 	 * We keep at most 50 keys (agent type info) in our cache.
@@ -233,8 +242,9 @@ func (p *SemaphoreMetricsProvider) calc(m *semaphore.Metrics, metricName string)
 func (p *SemaphoreMetricsProvider) getAgentTypeInfo(secretName string) (*AgentTypeInfo, error) {
 	value, found := p.secretCache.Get(secretName)
 	if found {
-		info := value.(AgentTypeInfo)
-		return &info, nil
+		if info, ok := value.(*AgentTypeInfo); ok {
+			return info, nil
+		}
 	}
 
 	// If the agent type info does not exist in the cache,
@@ -254,12 +264,12 @@ func (p *SemaphoreMetricsProvider) getAgentTypeInfo(secretName string) (*AgentTy
 }
 
 func (p *SemaphoreMetricsProvider) unstructuredSecretToAgentTypeInfo(secret *unstructured.Unstructured) (*AgentTypeInfo, error) {
-	endpoint, err := getNestedString(secret, "data.endpoint")
+	endpoint, err := getNestedString(secret, "data", "endpoint")
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := getNestedString(secret, "data.token")
+	token, err := getNestedString(secret, "data", "token")
 	if err != nil {
 		return nil, err
 	}
@@ -294,11 +304,17 @@ func filterByMetricSelector(values []metrics.ExternalMetricValue, metricSelector
 	return filtered
 }
 
-func getNestedString(o *unstructured.Unstructured, fieldName string) (string, error) {
-	v, found, err := unstructured.NestedString(o.Object, fieldName)
+func getNestedString(o *unstructured.Unstructured, fields ...string) (string, error) {
+	o.GetName()
+	v, found, err := unstructured.NestedString(o.Object, fields...)
 	if !found || err != nil {
-		return "", fmt.Errorf("could not find field '%s' in unstructured object %v", fieldName, o.Object)
+		return "", fmt.Errorf("could not find nested field in unstructured object %v", o.Object)
 	}
 
-	return v, nil
+	decoded, err := base64.StdEncoding.DecodeString(v)
+	if err != nil {
+		return "", fmt.Errorf("error decoding nested field from base64: %v", err)
+	}
+
+	return string(decoded), nil
 }

@@ -11,7 +11,7 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func NewClient(httpClient *http.Client, endpoint, token string) *Client {
+func NewClient(httpClient *http.Client) *Client {
 	return &Client{httpClient: httpClient}
 }
 
@@ -58,7 +58,8 @@ func (m *AgentMetrics) OccupiedPercentage() int {
 }
 
 func (c *Client) GetMetrics(endpoint, token string) (*Metrics, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://%s/api/v1/self_hosted_agents/metrics", endpoint), nil)
+	url := fmt.Sprintf("https://%s/api/v1/self_hosted_agents/metrics", endpoint)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

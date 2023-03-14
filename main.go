@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"net/http"
 	"os"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -9,6 +10,7 @@ import (
 	"k8s.io/klog/v2"
 
 	semaphoreProvider "github.com/semaphoreci/k8s-metrics-apiserver/pkg/provider"
+	"github.com/semaphoreci/k8s-metrics-apiserver/pkg/semaphore"
 	basecmd "sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
 )
 
@@ -29,8 +31,9 @@ func (a *SemaphoreAdapter) makeProviderOrDie() *semaphoreProvider.SemaphoreMetri
 	}
 
 	provider, err := semaphoreProvider.New(semaphoreProvider.Config{
-		Client: client,
-		Mapper: mapper,
+		Client:          client,
+		Mapper:          mapper,
+		SemaphoreClient: semaphore.NewClient(http.DefaultClient),
 	})
 
 	if err != nil {
