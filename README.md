@@ -6,8 +6,10 @@ Check the [Semaphore agent Helm chart](https://github.com/renderedtext/helm-char
 
 ## Metrics exposed
 
-- `idle_agents`
-- `occupied_agents`
-- `running_jobs`
-- `queued_jobs`
-- `occupied_agents_percentage`
+- `agents_total`
+- `agents_idle`
+- `agents_occupied`
+- `agents_occupied_percentage`
+- `jobs_total`
+- `jobs_running`
+- `jobs_queued`
