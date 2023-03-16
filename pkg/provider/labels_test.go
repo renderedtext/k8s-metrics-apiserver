@@ -36,15 +36,6 @@ func Test__Labels(t *testing.T) {
 		assert.Equal(t, l.Get("app2"), "")
 	})
 
-	t.Run("Has()", func(t *testing.T) {
-		l := Labels{metric: external_metrics.ExternalMetricValue{
-			MetricLabels: map[string]string{"app": "semaphore-agent"},
-		}}
-
-		assert.True(t, l.Has("app"))
-		assert.False(t, l.Has("app2"))
-	})
-
 	t.Run("does not match if only key exists", func(t *testing.T) {
 		selector := labels.SelectorFromSet(labels.Set(map[string]string{"app": ""}))
 
