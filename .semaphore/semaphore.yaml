@@ -1,0 +1,15 @@
+version: v1.0
+name: k8s-metrics-apiserver
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+blocks:
+  - name: Test
+    task:
+      jobs:
+        - name: Unit tests
+          commands:
+            - checkout
+            - make test.setup
+            - make test
