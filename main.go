@@ -33,7 +33,7 @@ func (a *SemaphoreAdapter) makeProviderOrDie() *semaphoreProvider.SemaphoreMetri
 	provider, err := semaphoreProvider.New(semaphoreProvider.Config{
 		Client:          client,
 		Mapper:          mapper,
-		SemaphoreClient: semaphore.NewClient(http.DefaultClient),
+		SemaphoreClient: semaphore.NewClient(http.DefaultClient, false),
 	})
 
 	if err != nil {

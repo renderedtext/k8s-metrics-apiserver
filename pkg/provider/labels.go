@@ -4,6 +4,8 @@ import (
 	metrics "k8s.io/metrics/pkg/apis/external_metrics"
 )
 
+// Implement of the apimachinery.Labels interface
+// See: https://github.com/kubernetes/apimachinery/blob/master/pkg/labels/labels.go
 type Labels struct {
 	metric metrics.ExternalMetricValue
 }

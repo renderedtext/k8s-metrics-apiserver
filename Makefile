@@ -1,7 +1,14 @@
-.PHONY: build
+.PHONY: build test
 
 REGISTRY=semaphoreci/metrics-apiserver
 LATEST_VERSION=$(shell git tag | sort --version-sort | tail -n 1)
+
+test.setup:
+	docker compose build
+	docker compose run app go get ./...
+
+test:
+	docker compose run --rm app gotestsum --format short-verbose --junitfile junit-report.xml --packages="./..." -- -p 1
 
 build:
 	rm -rf build
