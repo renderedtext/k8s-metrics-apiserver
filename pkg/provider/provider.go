@@ -14,6 +14,7 @@ import (
 	metrics "k8s.io/metrics/pkg/apis/external_metrics"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
 
+	"github.com/semaphoreci/k8s-metrics-apiserver/pkg/common"
 	"github.com/semaphoreci/k8s-metrics-apiserver/pkg/semaphore"
 )
 
@@ -52,7 +53,7 @@ func New(config Config) (*SemaphoreMetricsProvider, error) {
 func (p *SemaphoreMetricsProvider) ListAllExternalMetrics() []provider.ExternalMetricInfo {
 	list := []provider.ExternalMetricInfo{}
 
-	for _, m := range semaphore.AllMetrics {
+	for _, m := range common.AllMetrics {
 		list = append(list, provider.ExternalMetricInfo{Metric: m})
 	}
 
@@ -88,7 +89,7 @@ func (p *SemaphoreMetricsProvider) Collect() {
 		} else {
 			klog.Infof("Found %d agent types", len(agentTypes))
 			values := p.config.SemaphoreClient.GetMetrics(agentTypes)
-			for _, metricName := range semaphore.AllMetrics {
+			for _, metricName := range common.AllMetrics {
 				p.data.Store(metricName, filterByMetricName(values, metricName))
 			}
 		}
