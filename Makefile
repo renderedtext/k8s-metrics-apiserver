@@ -1,3 +1,5 @@
+.PHONY: build
+
 REGISTRY=semaphoreci/metrics-apiserver
 LATEST_VERSION=$(shell git tag | sort --version-sort | tail -n 1)
 
