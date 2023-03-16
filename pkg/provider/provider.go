@@ -133,10 +133,9 @@ func (p *SemaphoreMetricsProvider) GetExternalMetric(ctx context.Context, namesp
 func (p *SemaphoreMetricsProvider) ListAllExternalMetrics() []provider.ExternalMetricInfo {
 	list := []provider.ExternalMetricInfo{}
 
-	p.data.Range(func(key, value any) bool {
-		list = append(list, provider.ExternalMetricInfo{Metric: key.(string)})
-		return true
-	})
+	for _, m := range AllMetrics {
+		list = append(list, provider.ExternalMetricInfo{Metric: m})
+	}
 
 	return list
 }
