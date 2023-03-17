@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/semaphoreci/k8s-metrics-apiserver/pkg/common"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 )
 
