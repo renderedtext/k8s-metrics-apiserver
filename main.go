@@ -52,8 +52,7 @@ func main() {
 	cmd.Flags().StringVar(&cmd.Message, "msg", "starting semaphore metrics adapter...", "startup message")
 
 	// make sure you get the klog flags
-	// I get a 'flag redefined: alsologtostderr' panic if I do this, so I'm leaving it out for now
-	// logs.AddGoFlags(flag.CommandLine)
+	logs.AddFlags(cmd.Flags())
 
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 	cmd.Flags().Parse(os.Args)
