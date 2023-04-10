@@ -24,6 +24,7 @@ blocks:
             - make check.static
 
   - name: Test
+    dependencies: []
     task:
       jobs:
         - name: Unit tests
