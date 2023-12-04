@@ -55,7 +55,9 @@ func main() {
 	logs.AddFlags(cmd.Flags())
 
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
-	cmd.Flags().Parse(os.Args)
+	if err := cmd.Flags().Parse(os.Args); err != nil {
+		klog.Fatalf("unable to parse flags: %v", err)
+	}
 
 	provider := cmd.makeProviderOrDie()
 	cmd.WithExternalMetrics(provider)
